@@ -1,9 +1,7 @@
-import json
-
 import pytest
 import requests
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
+
+import utils.schema_validation as validation
 
 
 @pytest.fixture
@@ -46,20 +44,6 @@ def make_status_code_report(status_code, json_data, user_id, expected_status_cod
     else:
         report.append("Status code isn't correct")
         report_status = False
-
-    return report_status, report
-
-
-def make_body_report(json_data, user_id):
-    report = []
-    report_status = True
-
-    try:
-        validate(json_data, response_schema)
-        report.append("There are required fields")
-    except ValidationError:
-        report_status = False
-        report.append("Required fields are missing")
 
     return report_status, report
 
@@ -134,9 +118,8 @@ def test_body_response(base_url, user_id):
     # Send request
     url_get = base_url + user_id
     result = requests.get(url_get)
-
     # The report
-    report_status, report = make_body_report(result.json(), user_id)
+    report_status, report = validation.make_body_report(result.json(), response_schema)
     assert report_status, report
     print(report)
 
